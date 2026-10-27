@@ -8,7 +8,7 @@
   const LIVE = ['live_races', 'live_results', 'live_feed', 'live_status', 'live_counties'];
   const store = {}, failed = new Set(), calcs = [], cbs = [];
   // big, rarely needed files load the first time a page asks for them (precinct maps)
-  const LAZY = [];
+  const LAZY = ['precincts', 'precinct_results', 'precinct_notes'];
   const lazyStarted = new Set();
   // Analysis that stays in the private edition: ratings, trend flags, competitiveness counts.
   const PRIVATE_FIELDS = {

@@ -82,6 +82,15 @@ const proj = (lon, lat) => [(lon - LON0) * KX * SC, (LAT1 - lat) * SC];
 const GEO = {};
 const pArea = d3.polygonArea || ((p) => p.reduce((s, [x, y], i) => { const [x2, y2] = p[(i + 1) % p.length]; return s + (x * y2 - x2 * y) / 2; }, 0));
 const pCent = d3.polygonCentroid || ((p) => [d3.mean(p, (q) => q[0]), d3.mean(p, (q) => q[1])]);
+// point-in-polygon (even-odd ray cast, as d3.polygonContains); the dashboard's d3 build has no d3-polygon
+const pContains = d3.polygonContains || ((poly, [x, y]) => {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+});
 // Label placement. Every visible label is the same size (13 map units at the full-state view, scaling with zoom).
 // A label sits at its shape's center when it fits there; otherwise it may shift a short way to where it fits; if it
 // still doesn't fit at this zoom it is hidden until the user zooms in (then the center has room).
@@ -102,7 +111,7 @@ function labelSpot(rings, text, clip = null) {
   const ring = rings[0], W = emWidth(text) + (clip ? 0.3 : 0);
   const segs = [];  // every edge, holes included (and the clip shape's edges, which bound the piece too)
   for (const r of clip ? [...rings, ...clip] : rings) for (let i = 0; i < r.length; i++) segs.push([r[i], r[(i + 1) % r.length]]);
-  const inRings = (rs, p) => d3.polygonContains(rs[0], p) && !rs.slice(1).some((h) => d3.polygonContains(h, p));
+  const inRings = (rs, p) => pContains(rs[0], p) && !rs.slice(1).some((h) => pContains(h, p));
   const contains = (p) => inRings(rings, p) && (!clip || inRings(clip, p));
   const rays = ([px, py]) => {  // distance from p to the shape's edge going left, right, up and down
     let l = Infinity, r = Infinity, u = Infinity, dn = Infinity;

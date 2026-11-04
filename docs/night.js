@@ -147,7 +147,6 @@ function nightTip(ev, d) {
     const r = d.race;
     ntip.append(nel('b', O.pcls(r.status === 'called' ? r.winner_party : r.leader_party),
       r.status === 'called' ? `${r.winner} (${r.winner_party}) wins` : r.status === 'counting' ? `${r.leader} (${r.leader_party}) leads by ${r.margin_pct ?? 0}` : 'Waiting for results'));
-    if (r.status === 'counting') ntip.append(nel('div', 'muted', `About ${r.pct_in_est}% counted`));
     if (r.flip) ntip.append(nel('div', '', `Flip: ${r.flip}`));
     const ml = O.moneyLine && O.moneyLine(r.chamber, r.district);
     if (ml) ntip.append(nel('div', 'muted', `Raised: ${ml}`));
@@ -263,7 +262,6 @@ function seatTip(ev, d, ch) {
     else if (r.status === 'counting') tip.append(nel('b', O.pcls(r.leader_party), `${r.leader} (${r.leader_party}) leads by ${r.margin_pct ?? 0} pts`));
     else tip.append(nel('div', 'muted', 'Waiting for results'));
     for (const x of res) if (x.pct != null) tip.append(nel('div', '', `${x.candidate} (${x.party}) ${x.pct.toFixed(1)}%`));
-    if (r.status === 'counting') tip.append(nel('div', 'muted', `About ${r.pct_in_est}% counted`));
     if (r.field === 1) tip.append(nel('div', 'muted', 'Unopposed'));
     const ml = O.moneyLine && O.moneyLine(r.chamber, r.district);
     if (ml) tip.append(nel('div', 'muted', `Raised: ${ml}`));
@@ -285,7 +283,7 @@ function raceCard(r, big) {
   const top = nel('div', 'top');
   top.append(nel('span', 'name', r.label));
   const chip = nel('span', 'oea-chip ' + (r.status === 'called' ? (r.winner_party === 'D' ? 'd' : r.winner_party === 'R' ? 'r' : 't') : ''),
-    r.status === 'called' ? (r.flip ? `Flip · ${r.winner_party} win` : `Called · ${r.winner_party}`) : r.status === 'counting' ? `~${r.pct_in_est}% counted` : 'Too early');
+    r.status === 'called' ? (r.flip ? `Flip · ${r.winner_party} win` : `Called · ${r.winner_party}`) : r.status === 'counting' ? 'Counting' : 'Too early');  // no est. % counted (Scott, Nov 3)
   nmark(chip, 'live_races', 'status', { race_id: r.race_id });
   top.append(chip);
   c.append(top);
@@ -384,7 +382,6 @@ function drawNightDetail() {
   const dl = nel('dl', 'oea-kv');
   const kv = (k, f, v) => { if (v === '' || v == null) return; dl.append(nel('dt', '', k)); const dd = nel('dd'); dd.append(nmark(nel('span', '', String(v)), 'live_races', f, { race_id: r.race_id })); dl.append(dd); };
   kv('Votes counted', 'votes_counted', r.votes_counted ? O.fmt(r.votes_counted) : '');
-  kv('Estimated counted', 'pct_in_est', r.status === 'counting' ? `About ${r.pct_in_est}%` : '');
   kv('Why it was called', 'call_reason', r.call_reason);
   kv('Called at', 'called_at', r.called_at ? (r.call_reason === 'Unopposed' ? 'Poll close' : `${tfmt(r.called_at)}, ${tdate(r.called_at)}`) : '');
   P.append(dl);

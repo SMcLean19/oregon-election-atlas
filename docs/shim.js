@@ -70,7 +70,23 @@
       }
     } catch (e) { /* offline: try again next minute */ }
   }
-  setInterval(poll, 60000);
+  // Archive build: no polling; the Elections tab's replay slider swaps in a saved snapshot of the live files.
+  if (window.OEA_ARCHIVE) {
+    window.OEAArchive = {
+      async show(dir, current = () => true) {
+        const got = await Promise.all(LIVE.map(async (id) => {
+          const r = await fetch(`data/archive/${dir}/${id}.json`, { cache: 'default' });
+          if (!r.ok) throw new Error(`${dir}/${id}: ${r.status}`);
+          return [id, await r.json()];
+        }));
+        if (!current()) return;
+        for (const [id, rows] of got) store[id] = rows;
+        fire();
+      },
+    };
+  } else {
+    setInterval(poll, 60000);
+  }
   let t;
   window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(fire, 200); });
 })();
